@@ -17,5 +17,41 @@ def load_data(nrows):
     return data
 
 data_load_state = st.text('Loading Data...')
-data = load_data(100)
-data_load_state.text('Done! (using st.cache)')
+data = load_data(10000)
+data_load_state.text('Loading Data Done!')
+
+st.subheader('Raw Data')
+if st.checkbox('Show Raw Data'):
+    st.write(data)
+
+st.subheader('Number of Pickups by Hour')
+hist_values = np.histogram(data[DATE_COLUMN].dt.hour, bins=24, range=(0,24))[0]
+st.bar_chart(hist_values)
+
+st.subheader('All Pickup Locations')
+st.map(data)
+
+st.subheader('Pickup locations and the Frequency at Each Location')
+st.text('Filter by Hour')
+hour_to_filter = st.slider('Hour', 0, 24, 17)
+filtered_data = data.loc[data[DATE_COLUMN].dt.hour == hour_to_filter]
+
+st.deck_gl_chart(
+     viewport={
+         'latitude': 40.71,
+         'longitude': -74,
+         'zoom': 11,
+         'pitch': 50,
+     },
+     layers=[{
+         'type': 'HexagonLayer',
+         'data': filtered_data,
+         'radius': 200,
+         'elevationScale': 4,
+         'elevationRange': [0, 1000],
+         'pickable': True,
+         'extruded': True,
+     }, {
+         'type': 'ScatterplotLayer',
+         'data': filtered_data,
+     }])
